@@ -1,4 +1,4 @@
-
+''' This file contains the style of the GUI. '''
 node_color1 = '#414443'
 node_color2 = '#4672F6'
 node_font_color = '#FFFFFF'
@@ -7,6 +7,7 @@ edge_color2 = '#4672F6'
 edge_label_face_color = '#000000'
 edge_label_font_color = '#FFFFFF'
 canvas_face_color = '#000000'
+cluster_colors = ['#4BA488', '#4672F6', '#D96C84', '#D9A06C', '#7E46F6', '#DD46F6']
 
 bg_color = """QMainWindow{
   background-color: #000000;
@@ -71,6 +72,24 @@ QPushButton:disabled{
 }
 QPushButton:hover{
   background-color: #3759C1;
+  color: #FFFFFF;
+}
+"""
+
+button_style5 = """QPushButton{
+  background-color: #4BA488;
+  color: #FFFFFF;
+  height: 30px;
+  width: 200px;
+  border-radius: 6px;
+  font: inter;
+}
+QPushButton:disabled{
+  background-color: #265E4C;
+  color: #9BA5C2;
+}
+QPushButton:hover{
+  background-color: #357D67;
   color: #FFFFFF;
 }
 """

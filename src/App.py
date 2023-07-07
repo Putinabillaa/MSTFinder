@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from Kruskal import kruskal
 from Prim import prim
+from Clustering import clustering
 
 
 class MainWindow(QMainWindow):
@@ -188,24 +189,45 @@ class MainWindow(QMainWindow):
             self.solve_button.setEnabled(False)            
         self.solve_button.clicked.connect(self.solve_button_clicked)
 
+        # Create cluster number textfield
+        clusterk_label = QLabel('Cluster Number:')
+        self.cluster_number_textfield = QLineEdit()
+        self.cluster_number_textfield.setStyleSheet(s.line_edit_style)
+
+        # Create clusterize button
+        self.clusterize_button = QPushButton('Clusterize', icon=QIcon("asset/cluster.png"))
+        self.clusterize_button.setStyleSheet(s.button_style5)
+        self.clusterize_button.setMaximumWidth(200)
+        self.clusterize_button.clicked.connect(self.clusterize_button_clicked)
+        if len(self.graph.nodes()) == 0:
+            self.clusterize_button.setEnabled(False)   
+
+        # Create QHBoxLayout for file clusterize buttons    
+        clusterize_hlayout = QHBoxLayout()  
+        clusterize_hlayout.addWidget(clusterk_label)
+        clusterize_hlayout.addWidget(self.cluster_number_textfield)
+        clusterize_hlayout.addWidget(self.clusterize_button)
+
         # Create canvas for graph visualization
         self.figure = Figure(facecolor=s.canvas_face_color)
         self.canvas = FigureCanvas(self.figure)
 
         # Add widgets to layout
         stretchable_layout.addWidget(self.canvas)
-        fixed_width_layout.addWidget(self.total_weight_label)
-        fixed_width_layout.addWidget(self.total_weight_label)   
+        stretchable_layout.addWidget(self.total_weight_label)
         fixed_width_layout.addLayout(file_visualize_hlayout)
         fixed_width_layout.addLayout(edit_node_hlayout)
         fixed_width_layout.addLayout(add_edge_hlayout)
         fixed_width_layout.addLayout(del_edge_hlayout)
         fixed_width_layout.addLayout(algo_hlayout)
         fixed_width_layout.addWidget(self.solve_button)
+        fixed_width_layout.addLayout(clusterize_hlayout)
     
     def draw_graph(self, nc, ec):
+        '''Draws the graph on the canvas.'''
         if len(self.graph.nodes()) != 0: 
             self.solve_button.setEnabled(True)
+            self.clusterize_button.setEnabled(True)  
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         pos = nx.fruchterman_reingold_layout(self.graph, k=39)
@@ -243,11 +265,21 @@ class MainWindow(QMainWindow):
         '''handle solve button clicks'''
         self.solve_button.setEnabled(False)
         if self.algo_choice == 'Prim':
-            mst_edges, total_weight = prim(self.graph)
+            try:
+                mst_edges, total_weight = prim(self.graph)
+            except ValueError:
+                self.show_error_message("Graph is not connected")
+                self.solve_button.setEnabled(True)
+                return
 
         elif self.algo_choice == 'Kruskal':
-            mst_edges, total_weight = kruskal(self.graph)
-
+            try:
+                mst_edges, total_weight = kruskal(self.graph)
+            except ValueError:
+                self.show_error_message("Graph is not connected")
+                self.solve_button.setEnabled(True)
+                return
+            
         edge_colors = [s.edge_color2 if edge in mst_edges else s.edge_color1 for edge in self.graph.edges()]
         self.draw_graph(s.node_color2, edge_colors)
         self.total_weight_label.setText('Total weight: ' + str(total_weight))
@@ -280,8 +312,9 @@ class MainWindow(QMainWindow):
             src = int(self.add_edgesrc_textfield.text())
             dest = int(self.add_edgedest_textfield.text())
             weight = int(self.add_edgeweight_textfield.text())
+            if(src < 0 or dest < 0 or weight < 0): raise ValueError
         except ValueError:
-            self.show_error_message("Invalid input, please input an integer.")
+            self.show_error_message("Invalid input, please input a positive integer.")
             return
         self.graph.add_edge(src, dest, weight=weight)
         self.draw_graph(s.node_color1, s.edge_color1)
@@ -303,7 +336,36 @@ class MainWindow(QMainWindow):
                 self.show_error_message("Edge does not exist.")
         self.draw_graph(s.node_color1, s.edge_color1)
 
+    def clusterize_button_clicked(self):
+        '''handle clusterize button clicks'''
+        self.clusterize_button.setEnabled(False)
+        try:
+            cluster_number = int(self.cluster_number_textfield.text())
+            if(cluster_number < 0 or cluster_number > len(self.graph.nodes())):
+                raise ValueError
+        except ValueError:
+            self.show_error_message("Invalid input, please input a positive integer <= number of nodes.")
+            self.clusterize_button.setEnabled(True)
+            return
+        try:
+            clusters = clustering(self.graph, cluster_number)
+        except ValueError:
+            self.show_error_message("Graph is not connected.")
+            self.clusterize_button.setEnabled(True)
+            return
+        node_colors = [s.node_color1] * len(self.graph.nodes())
+        for i in range(len(clusters)):
+            for j, node in enumerate(self.graph.nodes()):
+                if node in clusters[i]:
+                    if(i < 6): node_colors[j] = s.cluster_colors[i]
+                    else: node_colors[j] = '#' + str(hex((0xFF3F3F + 2000*i)%0xFFFFFF).removeprefix('0x'))
+        self.total_weight_label.setText('Cluster(s): ' + str(clusters))
+        self.draw_graph(node_colors, s.edge_color1)
+        self.clusterize_button.setEnabled(True)
+
+
     def show_error_message(self, message):
+        '''show error message'''
         error_box = QMessageBox()
         error_box.setWindowTitle("Error")
         icon = QIcon("asset/error.png")
@@ -311,8 +373,9 @@ class MainWindow(QMainWindow):
         error_box.setText(message)
         error_box.setStyleSheet(s.error_style)
         error_box.exec_()
-
+    
     def read_graph(self, file_path):
+        '''read graph from file'''
         self.adj_matrix = []
         try:
             with open(file_path, 'r') as file:
@@ -328,6 +391,7 @@ class MainWindow(QMainWindow):
         return self.adj_matrix
 
     def create_graph(self):
+        '''create graph from adjacency matrix'''
         self.graph = nx.Graph()
         num_nodes = len(self.adj_matrix)
         for i in range(num_nodes):

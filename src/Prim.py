@@ -1,5 +1,6 @@
 ''' Prim's algorithm '''
 def prim(graph):
+    ''' Return the edges of a minimum spanning tree of an undirected graph'''
     mst_edges = []
     total_weight = 0
     start_vertex = list(graph.nodes)[0]
@@ -23,5 +24,6 @@ def prim(graph):
             total_weight += min_weight
         else:
             break
+    if len(visited) != len(graph.nodes):
+        raise ValueError
     return mst_edges, total_weight
-        
