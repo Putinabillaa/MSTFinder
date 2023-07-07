@@ -42,4 +42,4 @@ This is a simple Python app for finding minimum spanning trees using Kruskal and
 7. Additionally, adding/deleting edges/nodes can be done by fulfilling the text field and clicking the ```+``` or ```-``` button.
    
 ## Author
-Puti Nabilla Aidria (13521088)
+Puti Nabilla Aidira (13521088)
