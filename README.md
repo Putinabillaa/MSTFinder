@@ -9,7 +9,7 @@
 ## Description
 This is a simple Python app for finding minimum spanning trees using Kruskal and Prim algorithms with visualization. The app also includes features for MST-based clustering and allows adding/deleting nodes and edges
 
-<img width="300" alt="Screenshot 2023-07-08 at 01 10 20" src="https://github.com/Putinabillaa/MSTFinder/assets/109022993/22a48d28-493d-41dd-92dc-87632924682b">
+<img width="300" alt="251809797-22a48d28-493d-41dd-92dc-87632924682b" src="https://github.com/Putinabillaa/MSTFinder/assets/109022993/e3079e89-5aa6-4d08-a3d2-30227706add5">
 
 ## Program Requirements and Installation
 - Python 3.9 or Above
